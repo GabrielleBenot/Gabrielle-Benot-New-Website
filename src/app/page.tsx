@@ -216,6 +216,7 @@ export default function Home() {
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isDesktop, setIsDesktop] = useState(true);
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
 
   // Global Cursor physics
   const cursorX = useSpring(0, { damping: 30, stiffness: 400, mass: 0.5 });
@@ -472,7 +473,19 @@ export default function Home() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8rem' }}>
           {artwork.map((art) => {
              return (
-              <div id={art.slug} key={art.slug} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div 
+                id={art.slug} 
+                key={art.slug} 
+                onMouseEnter={() => setHoveredSlug(art.slug)}
+                onMouseLeave={() => setHoveredSlug(null)}
+                style={{ 
+                   display: 'flex', 
+                   flexDirection: 'column', 
+                   gap: '2rem',
+                   opacity: hoveredSlug && hoveredSlug !== art.slug ? 0.2 : 1,
+                   transition: 'opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1)'
+                }}
+              >
                 
                 {/* Collection Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderBottom: '1px solid #111', paddingBottom: '1rem' }}>
