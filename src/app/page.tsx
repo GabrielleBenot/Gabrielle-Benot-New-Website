@@ -13,24 +13,26 @@ const artwork = [
   { slug: 'metal', srcs: ['/art1.png', '/art2.png', '/art3.png', '/art1.png'], title: 'WORKS ON METAL', desc: 'INDUSTRIAL', galleryLink: 'https://shop.gabriellebenot.com' },
   { slug: 'parallax', srcs: ['/art2.png', '/art3.png', '/art1.png', '/art2.png'], title: 'PARALLAX ART', desc: 'SPECIAL EFFECTS', galleryLink: 'https://shop.gabriellebenot.com' },
   { slug: 'speed', srcs: ['/art3.png', '/art1.png', '/art2.png', '/art3.png'], title: 'SPEED', desc: 'AUTOMOTIVE SERIES', galleryLink: 'https://shop.gabriellebenot.com' },
+  { slug: 'textiles', srcs: ['/art1.png', '/art2.png', '/art1.png', '/art3.png'], title: 'BESPOKE TEXTILES', desc: 'RUGS & ARCHITECTURAL OBJECTS', galleryLink: '#' },
 ];
 
 const navGroups = [
   {
     title: '[ COLLECTIONS ]',
     links: [
-      { name: 'EQUINE ART', href: '#equine' },
-      { name: 'FACES', href: '#faces' },
-      { name: 'ABSTRACTS', href: '#abstracts' },
+      { name: 'EQUINE ART', href: '#equine', isGallery: true, slug: 'equine' },
+      { name: 'FACES', href: '#faces', isGallery: true, slug: 'faces' },
+      { name: 'ABSTRACTS', href: '#abstracts', isGallery: true, slug: 'abstracts' },
     ]
   },
   {
     title: '[ EXPLORATIONS ]',
     links: [
-      { name: 'FLORA & FAUNA', href: '#flora' },
-      { name: 'WORKS ON METAL', href: '#metal' },
-      { name: 'PARALLAX ART', href: '#parallax' },
-      { name: 'SPEED', href: '#speed' }
+      { name: 'FLORA & FAUNA', href: '#flora', isGallery: true, slug: 'flora' },
+      { name: 'WORKS ON METAL', href: '#metal', isGallery: true, slug: 'metal' },
+      { name: 'PARALLAX ART', href: '#parallax', isGallery: true, slug: 'parallax' },
+      { name: 'SPEED', href: '#speed', isGallery: true, slug: 'speed' },
+      { name: 'TEXTILES & RUGS', href: '#textiles', isGallery: true, slug: 'textiles' }
     ]
   },
   {
@@ -41,6 +43,29 @@ const navGroups = [
     ]
   }
 ];
+
+function TypewriterText({ text, delay = 0, speed = 25, className, style }: { text: string, delay?: number, speed?: number, className?: string, style?: any }) {
+  const [displayText, setDisplayText] = useState('');
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setStarted(true), delay);
+    return () => clearTimeout(timeout);
+  }, [delay]);
+
+  useEffect(() => {
+    if (!started) return;
+    let iteration = 0;
+    const interval = setInterval(() => {
+      setDisplayText(text.slice(0, iteration));
+      if (iteration > text.length) clearInterval(interval);
+      iteration++;
+    }, speed);
+    return () => clearInterval(interval);
+  }, [started, text, speed]);
+
+  return <div className={className} style={{...style, whiteSpace: 'pre-line'}}>{displayText}</div>;
+}
 
 function IndependentFlipTile({ src, idx, title, onSelect }: { src: string, idx: number, title: string, onSelect: () => void }) {
   const [isRevealed, setIsRevealed] = useState(false);
@@ -103,7 +128,35 @@ function IndependentFlipTile({ src, idx, title, onSelect }: { src: string, idx: 
   );
 }
 
-function GlitchLink({ link, setShowInquiryModal, isDesktop }: { link: any, setShowInquiryModal: any, isDesktop: boolean }) {
+const GalleryView = ({ slug, onBack, setExpandedImage }: { slug: string, onBack: () => void, setExpandedImage: any }) => {
+   const collection = artwork.find(a => a.slug === slug);
+   if (!collection) return null;
+   
+   // Simulating an extended deep archive with 16 placeholder images instead of just the 4 front pieces
+   const extendedArchive = [...collection.srcs, ...collection.srcs, ...collection.srcs, ...collection.srcs];
+   
+   return (
+     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} style={{ flex: 1, padding: '4rem 8vw 10rem 8vw', display: 'flex', flexDirection: 'column' }}>
+        <button onClick={onBack} onMouseEnter={(e)=>e.currentTarget.style.color='var(--dada-red)'} onMouseLeave={(e)=>e.currentTarget.style.color='#111'} className="typewriter" style={{ alignSelf: 'flex-start', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.2em', color: '#111', padding: '0 0 1rem 0', transition: 'color 0.2s', borderBottom: '1px solid transparent' }}>
+           [ ← RETURN TO FEED ]
+        </button>
+        <div style={{ marginTop: '2rem', borderBottom: '2px solid #111', paddingBottom: '2rem', marginBottom: '4rem' }}>
+          <h2 className="typewriter" style={{ fontSize: '4rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>{collection.title}</h2>
+          <p style={{ fontSize: '1.2rem', color: '#555', marginTop: '1rem', letterSpacing: '0.1em' }} className="typewriter">{collection.desc} // EXTENDED STUDIO ARCHIVE // {extendedArchive.length} FILES</p>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '3vw' }}>
+           {extendedArchive.map((src, i) => (
+               <div key={i} onClick={() => setExpandedImage(src)} style={{ aspectRatio: '1/1', position: 'relative', border: '1px solid #111', cursor: 'zoom-in', transition: 'transform 0.3s' }} onMouseEnter={(e)=>e.currentTarget.style.transform='scale(1.02)'} onMouseLeave={(e)=>e.currentTarget.style.transform='scale(1)'}>
+                  <Image src={src} fill style={{ objectFit: 'cover', filter: 'grayscale(100%) contrast(1.2)' }} alt={`${collection.title} Archive Piece ${i + 1}`} />
+               </div>
+           ))}
+        </div>
+     </motion.div>
+   )
+}
+
+function GlitchLink({ link, setShowInquiryModal, setActiveGallery, isDesktop }: { link: any, setShowInquiryModal: any, setActiveGallery?: any, isDesktop: boolean }) {
   const [isHovered, setIsHovered] = useState(false);
   const CHARS = "0101010987321!@#$%^*";
   const [displayText, setDisplayText] = useState(link.name);
@@ -158,6 +211,9 @@ function GlitchLink({ link, setShowInquiryModal, isDesktop }: { link: any, setSh
              if (link.isAction && link.action === 'INQUIRY') {
                  e.preventDefault();
                  setShowInquiryModal(true);
+             } else if (link.isGallery && setActiveGallery) {
+                 e.preventDefault();
+                 setActiveGallery(link.slug);
              }
         }}
         style={{ fontSize: '0.8rem', letterSpacing: '0.1em', color: isHovered ? 'var(--dada-red)' : '#444', textDecoration: 'none', transition: 'color 0.2s', cursor: 'pointer', position: 'relative', display: 'block', padding: '0.5rem 0' }}
@@ -214,6 +270,7 @@ export default function Home() {
   
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const [expandedVideo, setExpandedVideo] = useState(false);
+  const [activeGallery, setActiveGallery] = useState<string | null>(null);
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isDesktop, setIsDesktop] = useState(true);
@@ -418,8 +475,14 @@ export default function Home() {
          flexShrink: 0,
          overflowY: 'auto'
       }}>
-        <h1 className="typewriter" style={{ fontSize: '1.8rem', letterSpacing: '0.1em', marginBottom: '2.5rem', fontWeight: 'bold', lineHeight: 1.2 }}>
-          GABRIELLE<br/>BENOT
+        <h1 
+           onClick={() => setActiveGallery && setActiveGallery(null)}
+           className="typewriter" 
+           style={{ cursor: 'pointer', fontSize: '1.8rem', letterSpacing: '0.1em', marginBottom: '2.5rem', fontWeight: 'bold', lineHeight: 1.2, transition: 'opacity 0.2s' }}
+           onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'}
+           onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+        >
+           GABRIELLE<br/>BENOT
         </h1>
         
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
@@ -445,7 +508,7 @@ export default function Home() {
                 <span className="typewriter" style={{ fontSize: '0.8rem', color: '#111', letterSpacing: '0.15em', fontWeight: 'bold' }}>{group.title}</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', paddingLeft: '1rem' }}>
                   {group.links.map((link) => (
-                     <GlitchLink key={link.name} link={link} setShowInquiryModal={setShowInquiryModal} isDesktop={isDesktop} />
+                     <GlitchLink key={link.name} link={link} setShowInquiryModal={setShowInquiryModal} setActiveGallery={setActiveGallery} isDesktop={isDesktop} />
                   ))}
                 </div>
              </div>
@@ -453,8 +516,9 @@ export default function Home() {
 
           {/* Isolated Store Link */}
           <a 
-             href="https://shop.gabriellebenot.com"
-             style={{ fontSize: '0.8rem', letterSpacing: '0.1em', color: 'var(--dada-red)', fontWeight: 'bold', textDecoration: 'underline', marginTop: '0.5rem', transition: 'opacity 0.2s' }}
+             href="#"
+             onClick={(e) => { e.preventDefault(); alert("COMMERCE STOREFRONT OFFLINE // DEVELOPMENT IN PROGRESS"); }}
+             style={{ fontSize: '0.8rem', letterSpacing: '0.1em', color: 'var(--dada-red)', fontWeight: 'bold', textDecoration: 'underline', marginTop: '0.5rem', transition: 'opacity 0.2s', cursor: 'wait' }}
              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'}
              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
@@ -469,7 +533,10 @@ export default function Home() {
       </aside>
 
       {/* Main Content Area */}
-      <section style={{ flex: 1, padding: '6rem 8vw', display: 'flex', flexDirection: 'column' }}>
+      {activeGallery ? (
+         <GalleryView slug={activeGallery} onBack={() => setActiveGallery(null)} setExpandedImage={setExpandedImage} />
+      ) : (
+         <section style={{ flex: 1, padding: '6rem 8vw', display: 'flex', flexDirection: 'column' }}>
           
         {/* Gallery Feed */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8rem' }}>
@@ -502,8 +569,8 @@ export default function Home() {
                    ))}
                 </div>
 
-                <a href={art.galleryLink} target="_blank" rel="noopener noreferrer" className="typewriter" style={{ color: 'var(--dada-red)', fontSize: '1rem', letterSpacing: '0.15em', textDecoration: 'underline', marginTop: '0.5rem', alignSelf: 'flex-start', transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'} onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
-                  VIEW GALLERY ↗
+                <a href="#" onClick={(e) => { e.preventDefault(); setActiveGallery(art.slug); }} className="typewriter" style={{ cursor: 'pointer', color: 'var(--dada-red)', fontSize: '1rem', letterSpacing: '0.15em', textDecoration: 'underline', marginTop: '0.5rem', alignSelf: 'flex-start', transition: 'opacity 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'} onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
+                  [ OPEN EXTENDED ARCHIVE ]
                 </a>
 
               </div>
@@ -577,6 +644,35 @@ export default function Home() {
                )}
             </motion.div>
           </div>
+
+          {/* Applied Arts / Textile Extension (SEO & Physical Objects) */}
+          <div style={{ display: 'flex', gap: '4rem', marginTop: '6rem', paddingTop: '4rem', borderTop: '1px dashed #ccc', flexDirection: 'row', flexWrap: 'wrap' }}>
+             <div style={{ flex: 1, minWidth: '300px', paddingRight: '2vw' }}>
+               <h2 className="typewriter" style={{ fontSize: '1.2rem', marginBottom: '2rem', fontWeight: 'bold', letterSpacing: '0.1em', color: '#111' }}>[ APPLIED ARTS // BESPOKE TEXTILES ]</h2>
+               <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
+                 The abstract concepts developed on canvas are frequently translated into spatial objects. By integrating raw textures and conceptual minimalism into the physical environment, Gabrielle Benot produces custom hand-tufted textiles and large-scale bespoke rugs. 
+               </p>
+               <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
+                 These functional art pieces extend the architectural dominance of the paintings directly onto the floor, engineered specifically for high-end residential and commercial commissions.
+               </p>
+               <button onClick={() => setShowInquiryModal(true)} className="edgy-btn typewriter" style={{ marginTop: '1rem', padding: '1rem 2rem', border: '1px solid #111', background: 'transparent', color: '#111', letterSpacing: '0.1em', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.8rem' }} onMouseEnter={(e)=>{e.currentTarget.style.background='#111'; e.currentTarget.style.color='#f4f4f0'}} onMouseLeave={(e)=>{e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#111'}}>
+                  INQUIRE ABOUT COMMISSIONS ↗
+               </button>
+             </div>
+             {/* Placeholder Architectural Element for Rugs */}
+             <div 
+               onClick={() => setActiveGallery('textiles')} 
+               style={{ position: 'relative', width: '45%', minWidth: '300px', aspectRatio: '1/1', border: '1px solid #222', overflow: 'hidden', cursor: 'zoom-in', transition: 'transform 0.3s' }} 
+               onMouseEnter={(e)=>e.currentTarget.style.transform='scale(1.02)'} 
+               onMouseLeave={(e)=>e.currentTarget.style.transform='scale(1)'}
+             >
+                <Image src="/art1.png" fill style={{ objectFit: 'cover', filter: 'grayscale(100%) contrast(1.2)' }} alt="Bespoke Textile Sample" />
+                <div style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: '#050505', color: 'var(--dada-red)', padding: '0.5rem 1rem', fontSize: '0.7rem', letterSpacing: '0.2em' }} className="typewriter">
+                   [ OPEN TEXTILE ARCHIVE ]
+                </div>
+             </div>
+          </div>
+
         </div>
 
         {/* Decode Statement Mount */}
@@ -613,7 +709,8 @@ export default function Home() {
             </div>
         </div>
 
-      </section>
+        </section>
+      )}
 
       {/* Fullscreen Video Modal overlay (Framer Motion seamless layout) */}
       <AnimatePresence>
@@ -624,14 +721,22 @@ export default function Home() {
            >
              <motion.div 
                 layoutId="cinematic-video-block"
-                style={{ width: '90vw', height: '90vh', backgroundColor: '#050505', border: '1px solid #333', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ width: '90vw', height: '90vh', backgroundColor: '#050505', border: '1px solid #333', position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px', overflow: 'hidden' }}
              >
-                 <div className="typewriter" style={{ color: 'var(--dada-red)', fontSize: '1.5rem', letterSpacing: '0.3em', zIndex: 2, textAlign: 'center', lineHeight: '1.8' }}>
-                   [ VIDEO FEED INITIALIZED ]<br/>
-                   <span style={{ color: '#666', fontSize: '0.8rem', letterSpacing: '0.1em' }}>AWAITING PRODUCTION ASSET UPLOAD</span>
+                 {/* Left Panel: Ambient Texture & Materials */}
+                 <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                    <video autoPlay loop muted playsInline poster="/process.jpg" style={{ width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, filter: 'brightness(0.2) blur(3px) grayscale(60%)' }} src="/process_video.MP4"></video>
+                    <TypewriterText delay={800} speed={40} className="typewriter" text={"RAW IMPASTO"} style={{ position: 'absolute', top: '50%', left: '15%', transform: 'translateY(-50%)', color: '#fff', zIndex: 2, fontSize: '0.9rem', letterSpacing: '0.3em', lineHeight: '2.5' }} />
                  </div>
-                 {/* Cinematic Scanlines inside Video Block */}
-                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.2, backgroundImage: 'linear-gradient(#222 1px, transparent 1px), linear-gradient(90deg, #222 1px, transparent 1px)', backgroundSize: '2rem 2rem' }}></div>
+
+                 {/* Center Panel: 100% Raw Feature */}
+                 <video autoPlay loop muted playsInline poster="/process.jpg" style={{ width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, filter: 'contrast(1.1) brightness(0.95)' }} src="/process_video.MP4"></video>
+
+                 {/* Right Panel: Ambient Texture & Process */}
+                 <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                    <video autoPlay loop muted playsInline poster="/process.jpg" style={{ width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, filter: 'brightness(0.2) blur(3px) grayscale(60%)' }} src="/process_video.MP4"></video>
+                    <TypewriterText delay={1500} speed={15} className="typewriter" text={"My creative process is an intuitive, deeply physical exploration of texture and movement.\n\nI build each abstract canvas layer by layer, working with rich, sculptural impasto to carve light and shadow directly into the surface."} style={{ position: 'absolute', top: '50%', right: '15%', transform: 'translateY(-50%)', color: '#fff', zIndex: 2, fontSize: '0.8rem', letterSpacing: '0.2em', lineHeight: '2', textAlign: 'right', maxWidth: '300px' }} />
+                 </div>
              </motion.div>
              <span className="typewriter" style={{ color: '#666', fontSize: '1rem', marginTop: '2rem', letterSpacing: '0.2em' }}>[ CLICK ANYWHERE TO MINIMIZE ]</span>
            </div>
