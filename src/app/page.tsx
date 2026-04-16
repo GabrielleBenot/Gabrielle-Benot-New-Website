@@ -213,6 +213,7 @@ export default function Home() {
   const [introText, setIntroText] = useState("");
   
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
+  const [expandedVideo, setExpandedVideo] = useState(false);
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isDesktop, setIsDesktop] = useState(true);
@@ -405,12 +406,12 @@ export default function Home() {
       </motion.div>
       
       {/* Sticky Left Sidebar Navigation (Analog / Raw Layout) */}
-      <aside className="brutalist-scrollbar" style={{ 
+      <aside className="hide-scrollbar" style={{ 
          width: '300px', 
          position: 'sticky', 
          top: 0, 
          height: '100vh', 
-         padding: '4rem 3rem',
+         padding: '2rem 2.5rem',
          display: 'flex',
          flexDirection: 'column',
          borderRight: '2px solid #111111',
@@ -421,9 +422,26 @@ export default function Home() {
           GABRIELLE<br/>BENOT
         </h1>
         
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem' }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+           {/* Global State Toggles */}
+           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', paddingBottom: '1.2rem', borderBottom: '1px dashed #ccc' }}>
+              <button 
+                onClick={(e) => { e.preventDefault(); toggleAudio(); }} 
+                className="typewriter" 
+                style={{ background: 'none', border: 'none', color: audioEnabled ? 'var(--dada-red)' : '#444', textAlign: 'left', cursor: 'pointer', fontSize: '0.8rem', letterSpacing: '0.1em', padding: 0, transition: 'color 0.2s', fontWeight: audioEnabled ? 'bold' : 'normal' }}
+              >
+                 <span data-text={`[ ${audioEnabled ? 'DISABLE' : 'ENABLE'} AUDIO ]`}>[ {audioEnabled ? 'DISABLE' : 'ENABLE'} AUDIO ]</span>
+              </button>
+              <button 
+                onClick={(e) => { e.preventDefault(); toggleInvert(); }} 
+                className="typewriter" 
+                style={{ background: 'none', border: 'none', color: isInverted ? 'var(--dada-red)' : '#444', textAlign: 'left', cursor: 'pointer', fontSize: '0.8rem', letterSpacing: '0.1em', padding: 0, transition: 'color 0.2s', fontWeight: isInverted ? 'bold' : 'normal' }}
+              >
+                 <span data-text="[ INVERT THEME ]">[ INVERT THEME ]</span>
+              </button>
+           </div>
           {navGroups.map((group) => (
-             <div key={group.title} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+             <div key={group.title} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 <span className="typewriter" style={{ fontSize: '0.8rem', color: '#111', letterSpacing: '0.15em', fontWeight: 'bold' }}>{group.title}</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', paddingLeft: '1rem' }}>
                   {group.links.map((link) => (
@@ -443,22 +461,6 @@ export default function Home() {
              SHOP PRINTS ↗
           </a>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '2.5rem', paddingLeft: '1rem', borderTop: '1px dashed #ccc', paddingTop: '1.5rem' }}>
-              <button 
-                onClick={(e) => { e.preventDefault(); toggleAudio(); }} 
-                className="typewriter" 
-                style={{ background: 'none', border: 'none', color: audioEnabled ? 'var(--dada-red)' : '#444', textAlign: 'left', cursor: 'pointer', fontSize: '0.8rem', letterSpacing: '0.1em', padding: 0, transition: 'color 0.2s', fontWeight: audioEnabled ? 'bold' : 'normal' }}
-              >
-                 <span data-text={`[ ${audioEnabled ? 'DISABLE' : 'ENABLE'} AUDIO ]`}>[ {audioEnabled ? 'DISABLE' : 'ENABLE'} AUDIO ]</span>
-              </button>
-              <button 
-                onClick={(e) => { e.preventDefault(); toggleInvert(); }} 
-                className="typewriter" 
-                style={{ background: 'none', border: 'none', color: isInverted ? 'var(--dada-red)' : '#444', textAlign: 'left', cursor: 'pointer', fontSize: '0.8rem', letterSpacing: '0.1em', padding: 0, transition: 'color 0.2s', fontWeight: isInverted ? 'bold' : 'normal' }}
-              >
-                 <span data-text="[ INVERT THEME ]">[ INVERT THEME ]</span>
-              </button>
-           </div>
         </nav>
 
         <div style={{ marginTop: 'auto', fontSize: '0.7rem', color: '#111', letterSpacing: '0.05em', borderTop: '1px solid #111', paddingTop: '1rem' }}>
@@ -509,13 +511,13 @@ export default function Home() {
           })}
         </div>
 
-        {/* Biography Section with Static Portrait */}
+        {/* Biography Section 1: Philosophy */}
         <div id="bio" style={{ paddingTop: '6rem', marginTop: '6rem', borderTop: '2px dashed #111', display: 'flex', gap: '6vw', alignItems: 'center' }}>
             <div style={{ position: 'relative', width: '45%', aspectRatio: '3/4', border: '1px solid #111' }}>
                <Image src="/artist.png" alt="Gabrielle Benot" fill style={{ objectFit: 'cover', filter: 'grayscale(100%) contrast(1.2)' }} />
             </div>
             
-            <div className="brutalist-scrollbar" style={{ flex: 1, paddingBottom: '2rem', maxHeight: '400px', overflowY: 'auto' }}>
+            <div style={{ flex: 1, paddingBottom: '2rem' }}>
               <h2 className="typewriter" style={{ fontSize: '3rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>PHILOSOPHY</h2>
               <p style={{ fontSize: '1.2rem', lineHeight: 1.8, color: '#111', marginBottom: '2.5rem', borderLeft: '4px solid var(--dada-red)', paddingLeft: '2rem' }}>
                 "THE CONVENTIONAL DEFINITION OF REALITY AND THE IDEA OF NORMAL LIFE MEAN NOTHING."<br/><span style={{ fontSize: '0.9rem', color: 'var(--dada-red)'}}>- SIGMAR POLKE</span>
@@ -523,13 +525,58 @@ export default function Home() {
               <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
                 As a multimedia artist, I love working with a variety of styles and keep up the tradition of experimental art techniques of the great masters such as Roy Lichtenstein, Sigmar Polke, and James Rosenquist. Whether it is an aesthetically pleasing high art, thought-provoking conceptual minimalism, or just a visually ambivalent mixture of things, I try to create a collision of high and low culture.
               </p>
-              <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
-                 My process is driven by the subversion of traditional forms. By exploring raw materials like industrial metal, discarded ephemera, and heavy textural impasto, I bridge the gap between traditional fine art painting and digital perceptual shifts.
-              </p>
-              <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
-                 The Speed series, for instance, strips away the recognizable silhouettes of luxury automotive design, focusing purely on the kinetic energy, velocity, and machinic violence of modern racing. Parallax Art, conversely, demands physical movement from the viewer—forcing them to shift their perspective to decode the narrative of the layers before them.
-              </p>
             </div>
+        </div>
+
+        {/* Biography Section 2: Technique & Process (Text & Brutalist Video Frame) */}
+        <div style={{ paddingTop: '4rem', paddingBottom: '2rem', borderBottom: '1px solid #111', marginBottom: '2rem' }}>
+          <h2 className="typewriter" style={{ fontSize: '2rem', marginBottom: '2.5rem', fontWeight: 'bold', letterSpacing: '0.1em' }}>TECHNIQUE & PROCESS</h2>
+          <div style={{ display: 'flex', gap: '6vw', alignItems: 'center' }}>
+            <div style={{ flex: 1 }}>
+               <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
+                 My process is driven by the subversion of traditional forms. By exploring raw materials like industrial metal, discarded ephemera, and heavy textural impasto, I bridge the gap between traditional fine art painting and digital perceptual shifts.
+               </p>
+               <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
+                 The Speed series, for instance, strips away the recognizable silhouettes of luxury automotive design, focusing purely on the kinetic energy, velocity, and machinic violence of modern racing. Parallax Art, conversely, demands physical movement from the viewer—forcing them to shift their perspective to decode the narrative of the layers before them.
+               </p>
+            </div>
+            {/* The Interactive Cinematic Output Terminal */}
+            <motion.div 
+               layoutId="cinematic-video-block"
+               onClick={() => setExpandedVideo(true)}
+               style={{ cursor: 'zoom-in', position: 'relative', width: '52%', aspectRatio: '4/3', backgroundColor: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #333', overflow: 'hidden' }}
+            >
+               {!expandedVideo && (
+                 <>
+                   {/* Tactical Viewfinder HUD */}
+                   <div style={{ position: 'absolute', top: '1.5rem', left: '1.5rem', width: '30px', height: '30px', borderTop: '2px solid #555', borderLeft: '2px solid #555', zIndex: 3 }}></div>
+                   <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', width: '30px', height: '30px', borderTop: '2px solid #555', borderRight: '2px solid #555', zIndex: 3 }}></div>
+                   <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', width: '30px', height: '30px', borderBottom: '2px solid #555', borderLeft: '2px solid #555', zIndex: 3 }}></div>
+                   <div style={{ position: 'absolute', bottom: '1.5rem', right: '1.5rem', width: '30px', height: '30px', borderBottom: '2px solid #555', borderRight: '2px solid #555', zIndex: 3 }}></div>
+
+                   {/* Blinking Recording Status */}
+                   <motion.div 
+                      animate={{ opacity: [1, 0, 1] }} 
+                      transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                      className="typewriter"
+                      style={{ position: 'absolute', top: '2rem', left: '50%', transform: 'translateX(-50%)', color: 'var(--dada-red)', fontSize: '0.7rem', letterSpacing: '0.4em', zIndex: 3, display: 'flex', alignItems: 'center', gap: '0.8rem', fontWeight: 'bold' }}
+                   >
+                     <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--dada-red)', boxShadow: '0 0 10px var(--dada-red)' }}></div>
+                     STDBY
+                   </motion.div>
+
+                   {/* Center Reticle Text */}
+                   <div className="typewriter" style={{ color: '#eaeaea', fontSize: '0.9rem', letterSpacing: '0.3em', zIndex: 2, textAlign: 'center', lineHeight: '2' }}>
+                     [ ARCHIVE OFFLINE ]<br/>
+                     <span style={{ color: '#555', fontSize: '0.65rem' }}>AWAITING TRANSMISSION</span>
+                   </div>
+                   
+                   {/* Cinematic Scanlines */}
+                   <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.2, backgroundImage: 'linear-gradient(#222 1px, transparent 1px), linear-gradient(90deg, #222 1px, transparent 1px)', backgroundSize: '1.5rem 1.5rem' }}></div>
+                 </>
+               )}
+            </motion.div>
+          </div>
         </div>
 
         {/* Decode Statement Mount */}
@@ -567,6 +614,29 @@ export default function Home() {
         </div>
 
       </section>
+
+      {/* Fullscreen Video Modal overlay (Framer Motion seamless layout) */}
+      <AnimatePresence>
+         {expandedVideo && (
+           <div 
+             style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#000000f5', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' }}
+             onClick={() => setExpandedVideo(false)}
+           >
+             <motion.div 
+                layoutId="cinematic-video-block"
+                style={{ width: '90vw', height: '90vh', backgroundColor: '#050505', border: '1px solid #333', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+             >
+                 <div className="typewriter" style={{ color: 'var(--dada-red)', fontSize: '1.5rem', letterSpacing: '0.3em', zIndex: 2, textAlign: 'center', lineHeight: '1.8' }}>
+                   [ VIDEO FEED INITIALIZED ]<br/>
+                   <span style={{ color: '#666', fontSize: '0.8rem', letterSpacing: '0.1em' }}>AWAITING PRODUCTION ASSET UPLOAD</span>
+                 </div>
+                 {/* Cinematic Scanlines inside Video Block */}
+                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.2, backgroundImage: 'linear-gradient(#222 1px, transparent 1px), linear-gradient(90deg, #222 1px, transparent 1px)', backgroundSize: '2rem 2rem' }}></div>
+             </motion.div>
+             <span className="typewriter" style={{ color: '#666', fontSize: '1rem', marginTop: '2rem', letterSpacing: '0.2em' }}>[ CLICK ANYWHERE TO MINIMIZE ]</span>
+           </div>
+         )}
+      </AnimatePresence>
 
       {/* Fullscreen Image Modal overlay */}
       {expandedImage && (
