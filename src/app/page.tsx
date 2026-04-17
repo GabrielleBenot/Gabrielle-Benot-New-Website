@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, AnimatePresence, useMotionTemplate } from 'framer-motion';
 import Lenis from 'lenis';
 
 const artwork = [
-  { slug: 'equine', srcs: ['/art1.png', '/art2.png', '/art3.png', '/art1.png'], title: 'EQUINE ART', desc: 'ORIGINALS', galleryLink: 'https://shop.gabriellebenot.com' },
-  { slug: 'faces', srcs: ['/art3.png', '/art1.png', '/art2.png', '/art3.png'], title: 'FACES', desc: 'MIXED MEDIA', galleryLink: 'https://shop.gabriellebenot.com' },
-  { slug: 'abstracts', srcs: ['/art2.png', '/art3.png', '/art1.png', '/art2.png'], title: 'ABSTRACTS', desc: 'MULTIMEDIA', galleryLink: 'https://shop.gabriellebenot.com' },
-  { slug: 'flora', srcs: ['/art3.png', '/art1.png', '/art2.png', '/art3.png'], title: 'FLORA & FAUNA', desc: 'NATURE STUDIES', galleryLink: 'https://shop.gabriellebenot.com' },
-  { slug: 'metal', srcs: ['/art1.png', '/art2.png', '/art3.png', '/art1.png'], title: 'WORKS ON METAL', desc: 'INDUSTRIAL', galleryLink: 'https://shop.gabriellebenot.com' },
-  { slug: 'parallax', srcs: ['/art2.png', '/art3.png', '/art1.png', '/art2.png'], title: 'PARALLAX ART', desc: 'SPECIAL EFFECTS', galleryLink: 'https://shop.gabriellebenot.com' },
-  { slug: 'speed', srcs: ['/art3.png', '/art1.png', '/art2.png', '/art3.png'], title: 'SPEED', desc: 'AUTOMOTIVE SERIES', galleryLink: 'https://shop.gabriellebenot.com' },
+  { slug: 'equine', srcs: ['/art1.png', '/art2.png', '/art3.png', '/art1.png'], title: 'EQUINE ART', desc: 'ORIGINALS', galleryLink: 'https://gabriellebenot.com/' },
+  { slug: 'faces', srcs: ['/art3.png', '/art1.png', '/art2.png', '/art3.png'], title: 'FACES', desc: 'MIXED MEDIA', galleryLink: 'https://gabriellebenot.com/' },
+  { slug: 'abstracts', srcs: ['/art2.png', '/art3.png', '/art1.png', '/art2.png'], title: 'ABSTRACTS', desc: 'MULTIMEDIA', galleryLink: 'https://gabriellebenot.com/' },
+  { slug: 'flora', srcs: ['/art3.png', '/art1.png', '/art2.png', '/art3.png'], title: 'FLORA & FAUNA', desc: 'NATURE STUDIES', galleryLink: 'https://gabriellebenot.com/' },
+  { slug: 'metal', srcs: ['/art1.png', '/art2.png', '/art3.png', '/art1.png'], title: 'WORKS ON METAL', desc: 'INDUSTRIAL', galleryLink: 'https://gabriellebenot.com/' },
+  { slug: 'parallax', srcs: ['/art2.png', '/art3.png', '/art1.png', '/art2.png'], title: 'PARALLAX ART', desc: 'SPECIAL EFFECTS', galleryLink: 'https://gabriellebenot.com/' },
+  { slug: 'speed', srcs: ['/art3.png', '/art1.png', '/art2.png', '/art3.png'], title: 'SPEED', desc: 'AUTOMOTIVE SERIES', galleryLink: 'https://gabriellebenot.com/' },
   { slug: 'textiles', srcs: ['/art1.png', '/art2.png', '/art1.png', '/art3.png'], title: 'BESPOKE TEXTILES', desc: 'RUGS & ARCHITECTURAL OBJECTS', galleryLink: '#' },
 ];
 
@@ -112,7 +112,7 @@ function IndependentFlipTile({ src, idx, title, onSelect }: { src: string, idx: 
     >
       <div className="flip-card" style={{ transform: isRevealed ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>
         <div className="flip-face flip-face--front">
-           <h3 className="typewriter" style={{ fontSize: '2rem', letterSpacing: '0.1em', opacity: 0.8 }}>VOL. {idx + 1}</h3>
+           <h3 className="typewriter" style={{ fontSize: 'clamp(1.2rem, 3vw, 2rem)', letterSpacing: '0.1em', opacity: 0.8 }}>VOL. {idx + 1}</h3>
         </div>
         <div className="flip-face flip-face--back liquid-hover" style={{ position: 'relative' }}>
            <Image src={src} fill style={{ objectFit: 'cover', filter: 'contrast(1.1)' }} alt={`${title} Piece ${idx+1}`}/>
@@ -128,7 +128,74 @@ function IndependentFlipTile({ src, idx, title, onSelect }: { src: string, idx: 
   );
 }
 
-const GalleryView = ({ slug, onBack, setExpandedImage }: { slug: string, onBack: () => void, setExpandedImage: any }) => {
+function ParallaxImage({ src, alt }: { src: string, alt: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], ["-12%", "12%"]);
+
+  return (
+    <div ref={ref} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden' }}>
+      <motion.div style={{ position: 'absolute', top: '-15%', left: '-15%', width: '130%', height: '130%', y }}>
+         <Image src={src} fill style={{ objectFit: 'cover', filter: 'grayscale(100%) contrast(1.2)' }} alt={alt} />
+      </motion.div>
+    </div>
+  );
+}
+
+function CodeScrambleText({ text }: { text: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const chars = "010101010987654321!@#$%^*XO";
+    const original = text;
+    
+    const interval = setInterval(() => {
+      if (Math.random() > 0.6) return; // Sporadic trigger
+      
+      const idx = Math.floor(Math.random() * original.length);
+      // Don't glitch empty space or slashes
+      if (original[idx] === ' ' || original[idx] === '/' || original[idx] === '[' || original[idx] === ']') return;
+      
+      const scrambledArray = original.split('');
+      const glitchLength = Math.floor(Math.random() * 5) + 3; // scrambles chunk of 3-7 chars
+      
+      for(let i=0; i<glitchLength; i++) {
+         if (scrambledArray[idx+i] && scrambledArray[idx+i] !== ' ' && scrambledArray[idx+i] !== '/') {
+            const randomChar = chars[Math.floor(Math.random() * chars.length)];
+            scrambledArray[idx+i] = `<span style="color: var(--dada-red); text-shadow: 0 0 8px var(--dada-red)">${randomChar}</span>`;
+         }
+      }
+      ref.current!.innerHTML = scrambledArray.join('');
+      
+      // Glitch snapback
+      setTimeout(() => {
+         if (ref.current) ref.current.innerHTML = original;
+      }, 120);
+      
+    }, 400);
+    
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span ref={ref} style={{ color: '#fff' }}>{text}</span>;
+}
+
+function InfiniteMarquee() {
+  const text = " MULTIMEDIA EXPERIMENTATION /// THE GUSCIO TECHNIQUE /// KINETIC ABSTRACTION /// COLLISION OF CULTURE /// ";
+  return (
+    <div style={{ position: 'relative', width: 'calc(100% + 12vw)', overflow: 'hidden', padding: 'clamp(0.6rem, 1.5vw, 1.2rem) 0', margin: '6rem -6vw', backgroundColor: '#050505', whiteSpace: 'nowrap', display: 'flex', borderTop: '1px dashed var(--dada-red)', borderBottom: '1px dashed var(--dada-red)', zIndex: 0 }}>
+       <div className="marquee-content typewriter" style={{ fontSize: 'clamp(1.1rem, 2.5vw, 1.8rem)', letterSpacing: '0.2em', fontWeight: 'bold', display: 'inline-block', lineHeight: 1 }}>
+           <CodeScrambleText text={text} />
+           <CodeScrambleText text={text} />
+           <CodeScrambleText text={text} />
+           <CodeScrambleText text={text} />
+       </div>
+    </div>
+  );
+}
+
+const GalleryView = ({ slug, onBack, setExpandedImage, isDesktop }: { slug: string, onBack: () => void, setExpandedImage: any, isDesktop: boolean }) => {
    const collection = artwork.find(a => a.slug === slug);
    if (!collection) return null;
    
@@ -136,19 +203,21 @@ const GalleryView = ({ slug, onBack, setExpandedImage }: { slug: string, onBack:
    const extendedArchive = [...collection.srcs, ...collection.srcs, ...collection.srcs, ...collection.srcs];
    
    return (
-     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} style={{ flex: 1, padding: '4rem 8vw 10rem 8vw', display: 'flex', flexDirection: 'column' }}>
-        <button onClick={onBack} onMouseEnter={(e)=>e.currentTarget.style.color='var(--dada-red)'} onMouseLeave={(e)=>e.currentTarget.style.color='#111'} className="typewriter" style={{ alignSelf: 'flex-start', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.2em', color: '#111', padding: '0 0 1rem 0', transition: 'color 0.2s', borderBottom: '1px solid transparent' }}>
-           [ ← RETURN TO FEED ]
-        </button>
+     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} style={{ flex: 1, minWidth: 0, padding: isDesktop ? '4rem 8vw 10rem 8vw' : '1rem 6vw 10rem 6vw', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'sticky', top: isDesktop ? '1rem' : '70px', zIndex: 10, backgroundColor: 'var(--background)', padding: '1rem 0', alignSelf: 'stretch', display: 'flex', alignItems: 'center' }}>
+           <button onClick={onBack} onMouseEnter={(e)=>e.currentTarget.style.color='var(--dada-red)'} onMouseLeave={(e)=>e.currentTarget.style.color='#111'} className="typewriter" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', letterSpacing: '0.2em', color: '#111', padding: 0, transition: 'color 0.2s', borderBottom: '1px solid transparent' }}>
+              [ ← RETURN TO FEED ]
+           </button>
+        </div>
         <div style={{ marginTop: '2rem', borderBottom: '2px solid #111', paddingBottom: '2rem', marginBottom: '4rem' }}>
-          <h2 className="typewriter" style={{ fontSize: '4rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>{collection.title}</h2>
-          <p style={{ fontSize: '1.2rem', color: '#555', marginTop: '1rem', letterSpacing: '0.1em' }} className="typewriter">{collection.desc} // EXTENDED STUDIO ARCHIVE // {extendedArchive.length} FILES</p>
+          <h2 className="typewriter" style={{ fontSize: 'clamp(1.4rem, 2vw, 2rem)', fontWeight: 'bold', letterSpacing: '0.05em' }}>{collection.title}</h2>
+          <p style={{ fontSize: 'clamp(0.7rem, 2vw, 0.9rem)', color: '#555', marginTop: '1rem', letterSpacing: '0.1em' }} className="typewriter">{collection.desc} // EXTENDED STUDIO ARCHIVE</p>
         </div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '3vw' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap: isDesktop ? '2rem' : '1rem' }}>
            {extendedArchive.map((src, i) => (
-               <div key={i} onClick={() => setExpandedImage(src)} style={{ aspectRatio: '1/1', position: 'relative', border: '1px solid #111', cursor: 'zoom-in', transition: 'transform 0.3s' }} onMouseEnter={(e)=>e.currentTarget.style.transform='scale(1.02)'} onMouseLeave={(e)=>e.currentTarget.style.transform='scale(1)'}>
-                  <Image src={src} fill style={{ objectFit: 'cover', filter: 'grayscale(100%) contrast(1.2)' }} alt={`${collection.title} Archive Piece ${i + 1}`} />
+               <div key={i} onClick={() => setExpandedImage(src)} style={{ width: '100%', aspectRatio: '1/1', position: 'relative', border: '1px solid #111', cursor: 'zoom-in', overflow: 'hidden' }}>
+                  <ParallaxImage src={src} alt={`${collection.title} Archive Piece ${i + 1}`} />
                </div>
            ))}
         </div>
@@ -228,6 +297,16 @@ function SpotlightStatement({ isDesktop, mousePos }: { isDesktop: boolean, mouse
   const containerRef = useRef<HTMLDivElement>(null);
   const [localMouse, setLocalMouse] = useState({ x: 500, y: 500 });
   
+  // Interactive scroll-driven spotlight for mobile phones
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start center", "end center"]
+  });
+  
+  const scrollYMapped = useTransform(scrollYProgress, [0, 1], [-20, 120]); // percentages
+  const maskMobile = useMotionTemplate`radial-gradient(circle 200px at 50% ${scrollYMapped}%, black 10%, transparent 80%)`;
+  const maskDesktop = `radial-gradient(circle 350px at ${localMouse.x}px ${localMouse.y}px, black 10%, transparent 80%)`;
+  
   useEffect(() => {
     if (containerRef.current) {
        const rect = containerRef.current.getBoundingClientRect();
@@ -235,32 +314,116 @@ function SpotlightStatement({ isDesktop, mousePos }: { isDesktop: boolean, mouse
     }
   }, [mousePos]);
 
-  const statementText = "I am an artist exploring the threshold where physical machinic violence meets abstract grace. My work strips away the conventional definitions of reality, focusing instead on kinetic energy, heavy textural impasto, and subverted traditional forms to bridge the gap between traditional fine art painting and modern perception.";
+  const statementText = "My art is an exploration of grace, movement, and the unseen threads that connect us. Through my signature 'Guscio' technique, I layer rich, sculptural textures that invite a deeply personal, tactile connection. Whether capturing the untamed spirit of equine silhouettes, the quiet harmony of biophilic forms, or the sweeping elegance of the Speed collection, my work seeks to transcend the canvas. It is a collision of high culture and raw human emotion - an invitation to pause, feel, and experience the world with renewed wonder.";
 
   return (
     <div ref={containerRef} style={{ marginTop: '8rem', paddingTop: '6rem', position: 'relative', overflow: 'hidden', paddingBottom: '6rem', backgroundColor: '#050505', color: '#111' }}>
        {/* Background text (Dark/Hidden) */}
-       <div style={{ position: 'relative', zIndex: 1, padding: '0 4rem' }}>
+       <div style={{ position: 'relative', zIndex: 1, padding: isDesktop ? '0 4rem' : '0 2rem' }}>
          <h2 className="typewriter" style={{ fontSize: '1rem', letterSpacing: '0.2em', marginBottom: '3rem', color: '#222' }}>ARTIST STATEMENT</h2>
-         <p style={{ fontSize: '2.2rem', lineHeight: '1.5', maxWidth: '1000px', fontWeight: 'lighter', fontFamily: '"Didot", "Bodoni MT", "Garamond", serif', letterSpacing: '0.05em' }}>
+         <p style={{ fontSize: 'clamp(1.4rem, 4vw, 2.2rem)', lineHeight: '1.6', maxWidth: '1000px', fontWeight: 'lighter', fontFamily: '"Didot", "Bodoni MT", "Garamond", serif', letterSpacing: '0.05em' }}>
             {statementText}
          </p>
        </div>
        
-       {/* Illuminated text (Masked by mouse) */}
-       <div style={{ 
-            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', padding: '6rem 4rem', zIndex: 2, pointerEvents: 'none',
+       {/* Illuminated text (Masked by mouse or scroll) */}
+       <motion.div style={{ 
+            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', padding: isDesktop ? '6rem 4rem' : '6rem 2rem', zIndex: 2, pointerEvents: 'none',
             backgroundColor: '#050505',
             color: '#fff',
-            WebkitMaskImage: isDesktop ? `radial-gradient(circle 350px at ${localMouse.x}px ${localMouse.y}px, black 10%, transparent 80%)` : `radial-gradient(circle 400px at 50% 50%, black 10%, transparent 80%)`,
-            maskImage: isDesktop ? `radial-gradient(circle 350px at ${localMouse.x}px ${localMouse.y}px, black 10%, transparent 80%)` : `radial-gradient(circle 400px at 50% 50%, black 10%, transparent 80%)`
+            WebkitMaskImage: isDesktop ? maskDesktop : maskMobile,
+            maskImage: isDesktop ? maskDesktop : maskMobile
        }}>
          <h2 className="typewriter" style={{ fontSize: '1rem', letterSpacing: '0.2em', marginBottom: '3rem', color: 'var(--dada-red)' }}>ARTIST STATEMENT</h2>
-         <p style={{ fontSize: '2.2rem', lineHeight: '1.5', maxWidth: '1000px', fontWeight: 'lighter', fontFamily: '"Didot", "Bodoni MT", "Garamond", serif', letterSpacing: '0.05em' }}>
+         <p style={{ fontSize: 'clamp(1.4rem, 4vw, 2.2rem)', lineHeight: '1.6', maxWidth: '1000px', fontWeight: 'lighter', fontFamily: '"Didot", "Bodoni MT", "Garamond", serif', letterSpacing: '0.05em' }}>
             {statementText}
          </p>
-       </div>
+       </motion.div>
     </div>
+  );
+}
+
+function CopyLinkButton() {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="typewriter"
+      style={{
+        position: 'absolute',
+        top: '1.5rem',
+        right: '5vw',
+        background: 'none',
+        border: '1px solid #333',
+        backgroundColor: '#050505',
+        color: 'var(--dada-red)',
+        fontSize: '0.85rem',
+        padding: '0.5rem 1rem',
+        letterSpacing: '0.15em',
+        cursor: 'pointer',
+        zIndex: 10000
+      }}
+    >
+      {copied ? '[ LINK COPIED ]' : '[ COPY LINK ]'}
+    </button>
+  );
+}
+
+function ScrollToTopButton() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setIsVisible(window.scrollY > 800);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.5 }}
+          style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999, width: '60px', height: '60px' }}
+        >
+           {/* Slow rotating dashed ring */}
+           <motion.div
+             animate={{ rotate: 360 }}
+             transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: '1px dashed #555', borderRadius: '50%', pointerEvents: 'none' }}
+           />
+           
+           {/* Interactive Core */}
+           <motion.button
+             whileHover={{ backgroundColor: '#fff', color: 'var(--dada-red)', scale: 0.8 }}
+             whileTap={{ scale: 0.7 }}
+             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+             style={{ 
+               width: '100%', height: '100%', border: 'none', background: 'var(--dada-red)', color: '#fff', 
+               borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+               fontSize: '1rem', transition: 'background-color 0.3s'
+             }}
+           >
+             <span style={{ transform: 'translateY(-2px)' }}>▲</span>
+           </motion.button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -274,6 +437,7 @@ export default function Home() {
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isDesktop, setIsDesktop] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
 
   // Global Cursor physics
@@ -291,6 +455,11 @@ export default function Home() {
     if (!audioEnabled) {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       const ctx = new AudioContext();
+      
+      // Crucial for iOS Safari / Mobile Browsers
+      if (ctx.state === 'suspended') {
+         ctx.resume();
+      }
       
       const masterGain = ctx.createGain();
       masterGain.gain.value = 0.5; 
@@ -407,7 +576,7 @@ export default function Home() {
 
   useEffect(() => {
      // Intro Sequence Logic
-     const INTRO_STRING = "GABRIELLE BENOT — STUDIO ARCHIVE";
+     const INTRO_STRING = "GABRIELLE BENOT - STUDIO ARCHIVE";
      let i = 0;
      const typeInterval = setInterval(() => {
         setIntroText(INTRO_STRING.slice(0, i));
@@ -431,7 +600,7 @@ export default function Home() {
   }
 
   return (
-    <main style={{ display: 'flex', flexDirection: isDesktop ? 'row' : 'column', minHeight: '100vh', backgroundColor: 'var(--background)', color: '#111', fontFamily: 'var(--font-general)' }}>
+    <main style={{ position: 'relative', maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: isDesktop ? 'row' : 'column', minHeight: '100vh', backgroundColor: 'var(--background)', color: '#111', fontFamily: 'var(--font-general)', boxShadow: '0 0 40px rgba(0,0,0,0.03)' }}>
 
       {/* Cinematic Theater Loading Sequence */}
       <motion.div
@@ -462,13 +631,14 @@ export default function Home() {
         />
       </motion.div>
       
-      {/* Sticky Left Sidebar Navigation (Analog / Raw Layout) */}
-      <aside className="hide-scrollbar" style={{ 
-         width: '300px', 
+      {/* Navigation (Desktop Sidebar / Mobile Topbar) */}
+      {isDesktop ? (
+         <aside className="hide-scrollbar" style={{ 
+         width: '280px', 
          position: 'sticky', 
          top: 0, 
          height: '100vh', 
-         padding: '2rem 2.5rem',
+         padding: '1.5rem 2vw',
          display: 'flex',
          flexDirection: 'column',
          borderRight: '2px solid #111111',
@@ -478,16 +648,16 @@ export default function Home() {
         <h1 
            onClick={() => setActiveGallery && setActiveGallery(null)}
            className="typewriter" 
-           style={{ cursor: 'pointer', fontSize: '1.8rem', letterSpacing: '0.1em', marginBottom: '2.5rem', fontWeight: 'bold', lineHeight: 1.2, transition: 'opacity 0.2s' }}
+           style={{ cursor: 'pointer', fontSize: 'clamp(1.4rem, 1.5vw, 1.6rem)', letterSpacing: '0.1em', marginBottom: '1.5rem', fontWeight: 'bold', lineHeight: 1.2, transition: 'opacity 0.2s' }}
            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'}
            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
         >
            GABRIELLE<br/>BENOT
         </h1>
         
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
            {/* Global State Toggles */}
-           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', paddingBottom: '1.2rem', borderBottom: '1px dashed #ccc' }}>
+           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingBottom: '1rem', borderBottom: '1px dashed #ccc' }}>
               <button 
                 onClick={(e) => { e.preventDefault(); toggleAudio(); }} 
                 className="typewriter" 
@@ -504,9 +674,9 @@ export default function Home() {
               </button>
            </div>
           {navGroups.map((group) => (
-             <div key={group.title} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                <span className="typewriter" style={{ fontSize: '0.8rem', color: '#111', letterSpacing: '0.15em', fontWeight: 'bold' }}>{group.title}</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', paddingLeft: '1rem' }}>
+             <div key={group.title} style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                <span className="typewriter" style={{ fontSize: '0.75rem', color: '#111', letterSpacing: '0.15em', fontWeight: 'bold' }}>{group.title}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', paddingLeft: '1rem' }}>
                   {group.links.map((link) => (
                      <GlitchLink key={link.name} link={link} setShowInquiryModal={setShowInquiryModal} setActiveGallery={setActiveGallery} isDesktop={isDesktop} />
                   ))}
@@ -514,11 +684,10 @@ export default function Home() {
              </div>
           ))}
 
-          {/* Isolated Store Link */}
           <a 
-             href="#"
-             onClick={(e) => { e.preventDefault(); alert("COMMERCE STOREFRONT OFFLINE // DEVELOPMENT IN PROGRESS"); }}
-             style={{ fontSize: '0.8rem', letterSpacing: '0.1em', color: 'var(--dada-red)', fontWeight: 'bold', textDecoration: 'underline', marginTop: '0.5rem', transition: 'opacity 0.2s', cursor: 'wait' }}
+             href="https://gabriellebenot.com/"
+             target="_blank" rel="noopener noreferrer"
+             style={{ fontSize: '0.75rem', letterSpacing: '0.1em', color: 'var(--dada-red)', fontWeight: 'bold', textDecoration: 'underline', marginTop: '0.2rem', transition: 'opacity 0.2s' }}
              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'}
              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
@@ -531,15 +700,80 @@ export default function Home() {
           © GB {new Date().getFullYear()}
         </div>
       </aside>
+      ) : (
+         <>
+          <div style={{ position: 'sticky', top: 0, width: '100vw', padding: '1.2rem 6vw', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#050505', borderBottom: '1px solid #333', zIndex: 100, color: '#fff' }}>
+             <h1 onClick={() => setActiveGallery && setActiveGallery(null)} className="typewriter" style={{ fontSize: '1.2rem', letterSpacing: '0.1em', fontWeight: 'bold', margin: 0, cursor: 'pointer' }}>GABRIELLE BENOT</h1>
+             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="typewriter" style={{ background: 'none', border: '1px solid #fff', color: '#fff', fontSize: '0.8rem', padding: '0.5rem 1rem', cursor: 'pointer', letterSpacing: '0.1em' }}>
+                {mobileMenuOpen ? '[ CLOSE ]' : '[ MENU ]'}
+             </button>
+          </div>
+          
+          <AnimatePresence>
+             {mobileMenuOpen && (
+               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'calc(100vh - 70px)' }} exit={{ opacity: 0, height: 0 }} style={{ position: 'fixed', top: '70px', left: 0, width: '100vw', backgroundColor: '#050505', color: '#eaeaea', zIndex: 99, display: 'flex', flexDirection: 'column', padding: '2rem 6vw', overflowY: 'auto' }}>
+                  <nav style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }} onClick={() => setMobileMenuOpen(false)}>
+                     {/* Global State Toggles */}
+                     <div style={{ display: 'flex', gap: '2rem', paddingBottom: '1.5rem', borderBottom: '1px dashed #333' }}>
+                        <button onClick={(e) => { e.stopPropagation(); toggleAudio(); }} className="typewriter" style={{ background: 'none', border: 'none', color: audioEnabled ? 'var(--dada-red)' : '#eaeaea', textAlign: 'left', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.1em', padding: 0 }}>
+                           [ AUDIO {audioEnabled ? 'ON' : 'OFF'} ]
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); toggleInvert(); }} className="typewriter" style={{ background: 'none', border: 'none', color: isInverted ? 'var(--dada-red)' : '#eaeaea', textAlign: 'left', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.1em', padding: 0 }}>
+                           [ INVERT ]
+                        </button>
+                     </div>
+                     {navGroups.map((group) => (
+                        <div key={group.title} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                           <span className="typewriter" style={{ fontSize: '0.85rem', color: '#888', letterSpacing: '0.15em', fontWeight: 'bold' }}>{group.title}</span>
+                           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', paddingLeft: '1rem' }}>
+                             {group.links.map((link: any) => (
+                                <div key={link.name} style={{ display: 'inline-block' }}>
+                                   <a 
+                                     href={link.href}
+                                     onClick={(e) => {
+                                          if (link.isAction && link.action === 'INQUIRY') {
+                                              e.preventDefault();
+                                              setShowInquiryModal(true);
+                                          } else if (link.isGallery && setActiveGallery) {
+                                              e.preventDefault();
+                                              setActiveGallery(link.slug);
+                                          }
+                                     }}
+                                     className="typewriter"
+                                     style={{ fontSize: '1rem', letterSpacing: '0.1em', color: '#fff', textDecoration: 'none', display: 'block' }}
+                                   >
+                                     {link.name}
+                                   </a>
+                                </div>
+                             ))}
+                           </div>
+                        </div>
+                     ))}
+                     
+                     {/* Isolated Store Link Mobile */}
+                     <a 
+                        href="https://gabriellebenot.com/"
+                        target="_blank" rel="noopener noreferrer"
+                        className="typewriter"
+                        style={{ fontSize: '1rem', letterSpacing: '0.1em', color: 'var(--dada-red)', fontWeight: 'bold', textDecoration: 'underline', marginTop: '1rem', display: 'inline-block' }}
+                     >
+                        SHOP PRINTS ↗
+                     </a>
+                  </nav>
+               </motion.div>
+             )}
+          </AnimatePresence>
+         </>
+      )}
 
       {/* Main Content Area */}
       {activeGallery ? (
-         <GalleryView slug={activeGallery} onBack={() => setActiveGallery(null)} setExpandedImage={setExpandedImage} />
+         <GalleryView slug={activeGallery} onBack={() => setActiveGallery(null)} setExpandedImage={setExpandedImage} isDesktop={isDesktop} />
       ) : (
-         <section style={{ flex: 1, padding: '6rem 8vw', display: 'flex', flexDirection: 'column' }}>
+         <section style={{ flex: 1, minWidth: 0, padding: '4rem 6vw', display: 'flex', flexDirection: 'column' }}>
           
         {/* Gallery Feed */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6rem' }}>
           {artwork.map((art) => {
              return (
               <div 
@@ -551,19 +785,19 @@ export default function Home() {
                    display: 'flex', 
                    flexDirection: 'column', 
                    gap: '2rem',
-                   opacity: hoveredSlug && hoveredSlug !== art.slug ? 0.2 : 1,
+                   opacity: isDesktop && hoveredSlug && hoveredSlug !== art.slug ? 0.2 : 1,
                    transition: 'opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1)'
                 }}
               >
                 
                 {/* Collection Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderBottom: '1px solid #111', paddingBottom: '1rem' }}>
-                  <h2 className="typewriter" style={{ fontSize: '2.5rem', fontWeight: 'bold', letterSpacing: '0.1em' }}>{art.title}</h2>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--dada-red)', letterSpacing: '0.2em' }}>{art.desc}</span>
+                  <h2 className="typewriter" style={{ fontSize: 'clamp(1.4rem, 2vw, 2rem)', fontWeight: 'bold', letterSpacing: '0.1em' }}>{art.title}</h2>
+                  <span style={{ fontSize: 'clamp(0.7rem, 2vw, 0.9rem)', color: 'var(--dada-red)', letterSpacing: '0.2em' }}>{art.desc}</span>
                 </div>
                 
                 {/* Grid Sizing */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', maxWidth: '800px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isDesktop ? '0' : '5px', maxWidth: '800px' }}>
                    {art.srcs.map((src, idx) => (
                       <IndependentFlipTile key={idx} src={src} idx={idx} title={art.title} onSelect={() => setExpandedImage(src)} />
                    ))}
@@ -579,14 +813,14 @@ export default function Home() {
         </div>
 
         {/* Biography Section 1: Philosophy */}
-        <div id="bio" style={{ paddingTop: '6rem', marginTop: '6rem', borderTop: '2px dashed #111', display: 'flex', gap: '6vw', alignItems: 'center' }}>
-            <div style={{ position: 'relative', width: '45%', aspectRatio: '3/4', border: '1px solid #111' }}>
+        <div id="bio" style={{ paddingTop: '6rem', marginTop: '6rem', borderTop: '2px dashed #111', display: 'flex', gap: '6vw', flexDirection: isDesktop ? 'row' : 'column', alignItems: 'center' }}>
+            <div style={{ position: 'relative', width: isDesktop ? '45%' : '100%', aspectRatio: '3/4', border: '1px solid #111' }}>
                <Image src="/artist.png" alt="Gabrielle Benot" fill style={{ objectFit: 'cover', filter: 'grayscale(100%) contrast(1.2)' }} />
             </div>
             
-            <div style={{ flex: 1, paddingBottom: '2rem' }}>
-              <h2 className="typewriter" style={{ fontSize: '3rem', marginBottom: '2.5rem', fontWeight: 'bold' }}>PHILOSOPHY</h2>
-              <p style={{ fontSize: '1.2rem', lineHeight: 1.8, color: '#111', marginBottom: '2.5rem', borderLeft: '4px solid var(--dada-red)', paddingLeft: '2rem' }}>
+            <div style={{ flex: 1, paddingBottom: '2rem', maxWidth: '750px' }}>
+              <h2 className="typewriter" style={{ fontSize: 'clamp(1.4rem, 2vw, 2rem)', marginBottom: '2.5rem', fontWeight: 'bold', letterSpacing: '0.1em' }}>PHILOSOPHY</h2>
+              <p style={{ fontSize: 'clamp(1rem, 1.5vw, 1.2rem)', lineHeight: 1.8, color: '#111', marginBottom: '2.5rem', borderLeft: '4px solid var(--dada-red)', paddingLeft: '2rem' }}>
                 "THE CONVENTIONAL DEFINITION OF REALITY AND THE IDEA OF NORMAL LIFE MEAN NOTHING."<br/><span style={{ fontSize: '0.9rem', color: 'var(--dada-red)'}}>- SIGMAR POLKE</span>
               </p>
               <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
@@ -597,21 +831,21 @@ export default function Home() {
 
         {/* Biography Section 2: Technique & Process (Text & Brutalist Video Frame) */}
         <div style={{ paddingTop: '4rem', paddingBottom: '2rem', borderBottom: '1px solid #111', marginBottom: '2rem' }}>
-          <h2 className="typewriter" style={{ fontSize: '2rem', marginBottom: '2.5rem', fontWeight: 'bold', letterSpacing: '0.1em' }}>TECHNIQUE & PROCESS</h2>
-          <div style={{ display: 'flex', gap: '6vw', alignItems: 'center' }}>
-            <div style={{ flex: 1 }}>
+          <h2 className="typewriter" style={{ fontSize: 'clamp(1.4rem, 2vw, 2rem)', marginBottom: '2.5rem', fontWeight: 'bold', letterSpacing: '0.1em' }}>TECHNIQUE & PROCESS</h2>
+          <div style={{ display: 'flex', gap: '6vw', alignItems: 'center', flexDirection: isDesktop ? 'row' : 'column-reverse' }}>
+             <div style={{ flex: 1, maxWidth: '750px' }}>
                <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
-                 My process is driven by the subversion of traditional forms. By exploring raw materials like industrial metal, discarded ephemera, and heavy textural impasto, I bridge the gap between traditional fine art painting and digital perceptual shifts.
+                 At the heart of my practice lies the 'Guscio' technique - a signature multimedia methodology I developed that breathes tactile life into the canvas. By freely mixing wet and dry brushes, palette knives, oil pastels, and textured pastes, I build profound sculptural layers that demand to be felt as much as they are seen.
                </p>
                <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
-                 The Speed series, for instance, strips away the recognizable silhouettes of luxury automotive design, focusing purely on the kinetic energy, velocity, and machinic violence of modern racing. Parallax Art, conversely, demands physical movement from the viewer—forcing them to shift their perspective to decode the narrative of the layers before them.
+                 This textural approach bridges my diverse subjects. In my expressive equine art and biophilic pieces, these layered forms capture the organic, breathing spirit of the natural world. In stark contrast, my Speed collection strips away the recognizable silhouettes of luxury automotive design, translating the kinetic velocity of modern racing into pure, soaring abstraction.
                </p>
             </div>
             {/* The Interactive Cinematic Output Terminal */}
             <motion.div 
                layoutId="cinematic-video-block"
                onClick={() => setExpandedVideo(true)}
-               style={{ cursor: 'zoom-in', position: 'relative', width: '52%', aspectRatio: '4/3', backgroundColor: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #333', overflow: 'hidden' }}
+               style={{ cursor: 'zoom-in', position: 'relative', flex: isDesktop ? 1.2 : 'none', width: isDesktop ? 'auto' : '100%', minWidth: isDesktop ? '400px' : '0', aspectRatio: '4/3', backgroundColor: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #333', overflow: 'hidden' }}
             >
                {!expandedVideo && (
                  <>
@@ -647,13 +881,13 @@ export default function Home() {
 
           {/* Applied Arts / Textile Extension (SEO & Physical Objects) */}
           <div style={{ display: 'flex', gap: '4rem', marginTop: '6rem', paddingTop: '4rem', borderTop: '1px dashed #ccc', flexDirection: 'row', flexWrap: 'wrap' }}>
-             <div style={{ flex: 1, minWidth: '300px', paddingRight: '2vw' }}>
+             <div style={{ flex: 1, minWidth: '300px', paddingRight: '2vw', maxWidth: '750px' }}>
                <h2 className="typewriter" style={{ fontSize: '1.2rem', marginBottom: '2rem', fontWeight: 'bold', letterSpacing: '0.1em', color: '#111' }}>[ APPLIED ARTS // BESPOKE TEXTILES ]</h2>
                <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
-                 The abstract concepts developed on canvas are frequently translated into spatial objects. By integrating raw textures and conceptual minimalism into the physical environment, Gabrielle Benot produces custom hand-tufted textiles and large-scale bespoke rugs. 
+                 The narratives born on my canvases are not meant to be confined to the wall; they naturally spill over into the spaces we inhabit. By translating my signature abstract forms and organic palettes into the physical environment, I create custom hand-tufted textiles and large-scale bespoke rugs.
                </p>
                <p style={{ fontSize: '1rem', color: '#333', lineHeight: 1.8, marginBottom: '1.5rem', paddingRight: '1rem' }}>
-                 These functional art pieces extend the architectural dominance of the paintings directly onto the floor, engineered specifically for high-end residential and commercial commissions.
+                 These functional art pieces carry the exact same spirit and tactile depth as the paintings themselves, warming high-end architectural spaces with a sophisticated, lived-in humanity.
                </p>
                <button onClick={() => setShowInquiryModal(true)} className="edgy-btn typewriter" style={{ marginTop: '1rem', padding: '1rem 2rem', border: '1px solid #111', background: 'transparent', color: '#111', letterSpacing: '0.1em', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.8rem' }} onMouseEnter={(e)=>{e.currentTarget.style.background='#111'; e.currentTarget.style.color='#f4f4f0'}} onMouseLeave={(e)=>{e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#111'}}>
                   INQUIRE ABOUT COMMISSIONS ↗
@@ -662,7 +896,7 @@ export default function Home() {
              {/* Placeholder Architectural Element for Rugs */}
              <div 
                onClick={() => setActiveGallery('textiles')} 
-               style={{ position: 'relative', width: '45%', minWidth: '300px', aspectRatio: '1/1', border: '1px solid #222', overflow: 'hidden', cursor: 'zoom-in', transition: 'transform 0.3s' }} 
+               style={{ position: 'relative', width: isDesktop ? '45%' : '100%', minWidth: '300px', aspectRatio: '1/1', border: '1px solid #222', overflow: 'hidden', cursor: 'zoom-in', transition: 'transform 0.3s' }} 
                onMouseEnter={(e)=>e.currentTarget.style.transform='scale(1.02)'} 
                onMouseLeave={(e)=>e.currentTarget.style.transform='scale(1)'}
              >
@@ -676,11 +910,12 @@ export default function Home() {
         </div>
 
         {/* Decode Statement Mount */}
+        <InfiniteMarquee />
         <SpotlightStatement isDesktop={isDesktop} mousePos={mousePos} />
 
         {/* Footer / Subscribe Section */}
         <div style={{ marginTop: '8rem', paddingTop: '4rem', borderTop: '2px dashed #111', display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '4rem' }}>
-            <h2 className="typewriter" style={{ fontSize: '2rem', fontWeight: 'bold', letterSpacing: '0.1em' }}>STAY CONNECTED</h2>
+            <h2 className="typewriter" style={{ fontSize: 'clamp(1.4rem, 2vw, 2rem)', fontWeight: 'bold', letterSpacing: '0.1em' }}>STAY CONNECTED</h2>
             <p className="typewriter" style={{ fontSize: '0.9rem', letterSpacing: '0.1em', color: '#444', maxWidth: '600px', lineHeight: 1.6 }}>
               Subscribe to the studio newsletter for exhibition updates, or open a direct inquiry below.
             </p>
@@ -697,13 +932,13 @@ export default function Home() {
 
             {/* Social Media Links */}
             <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem', alignItems: 'center' }}>
-               <a href="#" style={{ color: '#111', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color='var(--dada-red)'} onMouseLeave={(e) => e.currentTarget.style.color='#111'}>
+               <a href="https://www.instagram.com/gabriellebenot/" target="_blank" rel="noopener noreferrer" style={{ color: '#111', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color='var(--dada-red)'} onMouseLeave={(e) => e.currentTarget.style.color='#111'}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                </a>
-               <a href="#" style={{ color: '#111', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color='var(--dada-red)'} onMouseLeave={(e) => e.currentTarget.style.color='#111'}>
+               <a href="https://www.facebook.com/Gabriellebenot/" target="_blank" rel="noopener noreferrer" style={{ color: '#111', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color='var(--dada-red)'} onMouseLeave={(e) => e.currentTarget.style.color='#111'}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
                </a>
-               <a href="#" style={{ color: '#111', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color='var(--dada-red)'} onMouseLeave={(e) => e.currentTarget.style.color='#111'}>
+               <a href="https://www.linkedin.com/in/julia-gabrielle-benot-738012107/" target="_blank" rel="noopener noreferrer" style={{ color: '#111', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color='var(--dada-red)'} onMouseLeave={(e) => e.currentTarget.style.color='#111'}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
                </a>
             </div>
@@ -721,22 +956,34 @@ export default function Home() {
            >
              <motion.div 
                 layoutId="cinematic-video-block"
-                style={{ width: '90vw', height: '90vh', backgroundColor: '#050505', border: '1px solid #333', position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px', overflow: 'hidden' }}
+                style={{ width: '90vw', height: '90vh', backgroundColor: '#050505', border: '1px solid #333', position: 'relative', display: isDesktop ? 'grid' : 'flex', gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : 'none', gap: '2px', overflow: 'hidden' }}
              >
-                 {/* Left Panel: Ambient Texture & Materials */}
-                 <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                    <video autoPlay loop muted playsInline poster="/process.jpg" style={{ width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, filter: 'brightness(0.2) blur(3px) grayscale(60%)' }} src="/process_video.MP4"></video>
-                    <TypewriterText delay={800} speed={40} className="typewriter" text={"RAW IMPASTO"} style={{ position: 'absolute', top: '50%', left: '15%', transform: 'translateY(-50%)', color: '#fff', zIndex: 2, fontSize: '0.9rem', letterSpacing: '0.3em', lineHeight: '2.5' }} />
-                 </div>
+                 {isDesktop ? (
+                   <>
+                     {/* Left Panel: Ambient Texture & Materials */}
+                     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                        <video autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, filter: 'brightness(0.2) blur(3px) grayscale(60%)' }} src="/process_video.MP4"></video>
+                        <TypewriterText delay={800} speed={40} className="typewriter" text={"RAW IMPASTO"} style={{ position: 'absolute', top: '50%', left: '15%', transform: 'translateY(-50%)', color: '#fff', zIndex: 2, fontSize: '0.9rem', letterSpacing: '0.3em', lineHeight: '2.5' }} />
+                     </div>
 
-                 {/* Center Panel: 100% Raw Feature */}
-                 <video autoPlay loop muted playsInline poster="/process.jpg" style={{ width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, filter: 'contrast(1.1) brightness(0.95)' }} src="/process_video.MP4"></video>
+                     {/* Center Panel: 100% Raw Feature */}
+                     <video autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, filter: 'contrast(1.1) brightness(0.95)' }} src="/process_video.MP4"></video>
 
-                 {/* Right Panel: Ambient Texture & Process */}
-                 <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                    <video autoPlay loop muted playsInline poster="/process.jpg" style={{ width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, filter: 'brightness(0.2) blur(3px) grayscale(60%)' }} src="/process_video.MP4"></video>
-                    <TypewriterText delay={1500} speed={15} className="typewriter" text={"My creative process is an intuitive, deeply physical exploration of texture and movement.\n\nI build each abstract canvas layer by layer, working with rich, sculptural impasto to carve light and shadow directly into the surface."} style={{ position: 'absolute', top: '50%', right: '15%', transform: 'translateY(-50%)', color: '#fff', zIndex: 2, fontSize: '0.8rem', letterSpacing: '0.2em', lineHeight: '2', textAlign: 'right', maxWidth: '300px' }} />
-                 </div>
+                     {/* Right Panel: Ambient Texture & Process */}
+                     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                        <video autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, filter: 'brightness(0.2) blur(3px) grayscale(60%)' }} src="/process_video.MP4"></video>
+                        <TypewriterText delay={1500} speed={15} className="typewriter" text={"My creative process is an intuitive, deeply physical exploration of texture and movement.\n\nI build each abstract canvas layer by layer, working with rich, sculptural impasto to carve light and shadow directly into the surface."} style={{ position: 'absolute', top: '50%', right: '15%', transform: 'translateY(-50%)', color: '#fff', zIndex: 2, fontSize: '0.8rem', letterSpacing: '0.2em', lineHeight: '2', textAlign: 'right', maxWidth: '300px' }} />
+                     </div>
+                   </>
+                 ) : (
+                   <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                      <video autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, filter: 'contrast(1.1) brightness(0.5)' }} src="/process_video.MP4"></video>
+                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: '2rem', justifyContent: 'center', alignItems: 'center', zIndex: 2 }}>
+                         <TypewriterText delay={800} speed={40} className="typewriter" text={"RAW IMPASTO"} style={{ color: 'var(--dada-red)', fontSize: '1.2rem', letterSpacing: '0.3em', marginBottom: '2rem', textAlign: 'center', fontWeight: 'bold' }} />
+                         <TypewriterText delay={1500} speed={15} className="typewriter" text={"My creative process is an intuitive, deeply physical exploration of texture and movement.\n\nI build each abstract canvas layer by layer, working with rich, sculptural impasto to carve light and shadow directly into the surface."} style={{ color: '#eaeaea', fontSize: '0.9rem', letterSpacing: '0.15em', lineHeight: '2', textAlign: 'center' }} />
+                      </div>
+                   </div>
+                 )}
              </motion.div>
              <span className="typewriter" style={{ color: '#666', fontSize: '1rem', marginTop: '2rem', letterSpacing: '0.2em' }}>[ CLICK ANYWHERE TO MINIMIZE ]</span>
            </div>
@@ -749,6 +996,7 @@ export default function Home() {
            style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#000000f0', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: isDesktop ? 'none' : 'zoom-out' }}
            onClick={() => setExpandedImage(null)}
          >
+           <CopyLinkButton />
            <div style={{ position: 'relative', width: '90vw', height: '90vh', cursor: isDesktop ? 'none' : 'pointer' }}>
               <Image src={expandedImage} fill style={{ objectFit: 'contain' }} alt="Expanded Artwork" />
            </div>
@@ -806,6 +1054,9 @@ export default function Home() {
           }}
         />
       )}
+
+      {/* Floating Scroll To Top Button */}
+      <ScrollToTopButton />
 
     </main>
   );
